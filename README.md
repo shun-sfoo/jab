@@ -5,8 +5,7 @@
 ### create database
 
 ```sql
-CREATE
-DATABASE IF NOT EXISTS RUNOOB DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
+CREATE DATABASE IF NOT EXISTS RUNOOB DEFAULT CHARSET utf8 COLLATE utf8_general_ci;
 ```
 
 ### dump sql

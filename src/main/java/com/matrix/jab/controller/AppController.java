@@ -15,7 +15,6 @@ import com.matrix.jab.model.entity.User;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -52,17 +51,9 @@ public class AppController {
             return "login";
         }
         model.addAttribute("key", LocalDate.now());
+        model.addAttribute("currentUser", user.getId());
         return "index";
     }
-
-    @RequestMapping("/list")
-    public String list(Model model, HttpSession session) {
-        model.addAttribute("key", LocalDate.now());
-        User user = (User) session.getAttribute("user");
-        model.addAttribute("currentUser", user.getId());
-        return "list";
-    }
-
 
     @RequestMapping("/login")
     public String login(String username, String password, HttpSession session, RedirectAttributes rda) {
@@ -80,19 +71,29 @@ public class AppController {
     }
 
 
-    @RequestMapping("/infoList")
-    @ResponseBody
-    public List<Info> infoList(Info info, String startTime, String endTime) {
+    private List<Info> searchList(Info info, String startTime, String endTime) {
         Specification<Info> s1 = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (StringUtils.hasText(info.getProductName())) {
                 predicates.add(cb.like(root.get("productName"), "%" + info.getProductName() + "%"));
             }
+            if (StringUtils.hasText(info.getProductCode())) {
+                predicates.add(cb.like(root.get("productCode"), "%" + info.getProductCode() + "%"));
+            }
             if (StringUtils.hasText(info.getCustomer())) {
                 predicates.add(cb.like(root.get("customer"), "%" + info.getCustomer() + "%"));
             }
+            if (StringUtils.hasText(info.getCustomerCode())) {
+                predicates.add(cb.like(root.get("customerCode"), "%" + info.getCustomerCode() + "%"));
+            }
+            if (StringUtils.hasText(info.getSupplier())) {
+                predicates.add(cb.like(root.get("supplier"), "%" + info.getSupplier() + "%"));
+            }
             if (StringUtils.hasText(info.getBatchNo())) {
                 predicates.add(cb.like(root.get("batchNo"), "%" + info.getBatchNo() + "%"));
+            }
+            if (StringUtils.hasText(info.getBatchCode())) {
+                predicates.add(cb.like(root.get("batchCode"), "%" + info.getBatchCode() + "%"));
             }
             if (StringUtils.hasText(startTime)) {
                 predicates.add(cb.greaterThanOrEqualTo(root.get("salesDate").as(String.class), startTime));
@@ -104,8 +105,13 @@ public class AppController {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         List<Info> list = infoDao.findAll(s1, Sort.by(Sort.Direction.DESC, "salesDate"));
-
         return list;
+    }
+
+    @RequestMapping("/infoList")
+    @ResponseBody
+    public List<Info> infoList(Info info, String startTime, String endTime) {
+        return searchList(info, startTime, endTime);
     }
 
     @RequestMapping("/crud")
@@ -120,6 +126,10 @@ public class AppController {
     public JsonResult upload(@RequestParam("file") MultipartFile multipartFile) {
         try {
             String name = multipartFile.getOriginalFilename();
+            FileRecord fr = fileRecordDao.findByFileName(name);
+            if (fr != null) {
+                return JsonResult.error("上传失败:已上传过相同名称的文件!");
+            }
             EasyExcel.read(multipartFile.getInputStream(), Info.class, new PageReadListener<Info>(dataList -> {
                 infoDao.saveAll(dataList);
             })).sheet().doRead();
@@ -135,28 +145,7 @@ public class AppController {
 
     @GetMapping("/export")
     public void export(HttpServletResponse response, Info info, String startTime, String endTime) throws IOException {
-        Specification<Info> s1 = (root, query, cb) -> {
-            List<Predicate> predicates = new ArrayList<>();
-            if (StringUtils.hasText(info.getProductName())) {
-                predicates.add(cb.like(root.get("productName"), "%" + info.getProductName() + "%"));
-            }
-            if (StringUtils.hasText(info.getCustomer())) {
-                predicates.add(cb.like(root.get("customer"), "%" + info.getCustomer() + "%"));
-            }
-            if (StringUtils.hasText(info.getBatchNo())) {
-                predicates.add(cb.like(root.get("batchNo"), "%" + info.getBatchNo() + "%"));
-            }
-            if (StringUtils.hasText(startTime)) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("salesDate").as(String.class), startTime));
-            }
-            if (StringUtils.hasText(endTime)) {
-                String tmp = endTime + " 23:59:59";
-                cb.lessThanOrEqualTo(root.get("salesDate").as(String.class), tmp);
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-
-        List<Info> list = infoDao.findAll(s1, Sort.by(Sort.Direction.DESC, "salesDate"));
+        List<Info> list = searchList(info, startTime, endTime);
         WriteCellStyle headWriteCellStyle = new WriteCellStyle();
         WriteFont headWriteFont = new WriteFont();
         headWriteFont.setFontHeightInPoints((short) 10);

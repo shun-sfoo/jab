@@ -13,9 +13,7 @@
 </head>
 <body>
 <!-- jQuery 和 Bootstrap 集成包（集成了 Popper） -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/bootstrap.min.css" >
 <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
@@ -25,7 +23,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #9b2631;">
     <div class="container-fluid">
-        <a class="navbar-brand" herf="/">管理平台</a>
+        <a class="navbar-brand" herf="/">广西明合药业有限责任公司</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu"
                 aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -39,9 +37,9 @@
 <div class="container-fluid">
     <div class="row">
         <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
-            <a href="#">
+            <a>
                 <img src="img/student_b.png" class="rounded mx-auto d-block">
-                <strong>xxxxxxxxxxxxxxxxxxxxxxxxx</strong>
+                <strong class="fs-6">广州白云山制药股份有限公司白云山制药总厂</strong>
             </a>
             <div class="d-grid gap-2">
                 <a id="passwdCh" class="btn btn-secondary">修改密码</a>
@@ -102,9 +100,16 @@
                         <input type="date" name="endTime" class="form-control">
                     </div>
                 </div>
+
+                <div></div>
+
                 <div class="col-12">
                     <button type="button" class="btn btn-info btn-sm submit">搜索</button>
                 </div>
+                <div class="col-12">
+                    <button type="button" class="btn btn-success btn-sm clear">重置</button>
+                </div>
+
             </form>
             <hr>
             <div>
@@ -327,6 +332,10 @@
             }
         })
     });
+
+    searchForm.find('.clear').click(function () {
+        document.querySelector('#searchForm').reset();
+    })
 
     searchForm.find('.submit').click(function () {
         var row = {}
