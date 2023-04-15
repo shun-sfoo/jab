@@ -120,6 +120,10 @@ public class AppController {
     public JsonResult upload(@RequestParam("file") MultipartFile multipartFile) {
         try {
             String name = multipartFile.getOriginalFilename();
+            FileRecord fr = fileRecordDao.findByFileName(name);
+            if (fr != null) {
+                return JsonResult.error("上传失败:已上传过相同名称的文件!");
+            }
             EasyExcel.read(multipartFile.getInputStream(), Info.class, new PageReadListener<Info>(dataList -> {
                 infoDao.saveAll(dataList);
             })).sheet().doRead();
